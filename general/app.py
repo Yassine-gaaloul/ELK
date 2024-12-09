@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 import os
+import csv
 
 app = Flask(__name__)
 
@@ -17,18 +18,32 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        return "No file part in the request", 400
+        return render_template('index.html', alert="Aucune partie de fichier n'a été trouvée.")
     file = request.files['file']
     if file.filename == '':
-        return "No file selected", 400
+        return render_template('index.html', alert="Aucun fichier n'a été sélectionné.")
     if file and allowed_file(file.filename):
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-        return f"File {file.filename} uploaded successfully!"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        return render_template('index.html', alert=f"Fichier {file.filename} téléchargé avec succès !")
     else:
-        return "Invalid file format. Only CSV files are allowed.", 400
+        return render_template('index.html', alert="Format de fichier invalide. Seuls les fichiers CSV sont autorisés.")
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    results = []
+    if request.method == 'POST':
+        query = request.form.get('query')
+        if query:
+            for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+                if allowed_file(filename):
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    with open(filepath, 'r') as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for row in reader:
+                            if query.lower() in str(row).lower():  # Search case-insensitively in row data
+                                results.append(row)
+    return render_template('search.html', results=results)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0') 
-
-
- 
+    app.run(debug=True, host='0.0.0.0')
