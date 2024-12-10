@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect
 import os
 import csv
 
@@ -8,42 +8,47 @@ UPLOAD_FOLDER = './data'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['ALLOWED_EXTENSIONS'] = {'csv'}
 
+# Vérifie si le fichier a une extension autorisée
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+# Page d'accueil
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# Route pour gérer l'upload
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        return render_template('index.html', alert="Aucune partie de fichier n'a été trouvée.")
+        return "No file part in the request", 400
     file = request.files['file']
     if file.filename == '':
-        return render_template('index.html', alert="Aucun fichier n'a été sélectionné.")
+        return "No file selected", 400
     if file and allowed_file(file.filename):
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(filepath)
-        return render_template('index.html', alert=f"Fichier {file.filename} téléchargé avec succès !")
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        return f"File {file.filename} uploaded successfully!"
     else:
-        return render_template('index.html', alert="Format de fichier invalide. Seuls les fichiers CSV sont autorisés.")
+        return "Invalid file format. Only CSV files are allowed.", 400
 
+# Route de recherche
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     results = []
     if request.method == 'POST':
         query = request.form.get('query')
         if query:
+            # Parcourir les fichiers CSV dans le dossier uploadé
             for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-                if allowed_file(filename):
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    with open(filepath, 'r') as csvfile:
-                        reader = csv.DictReader(csvfile)
-                        for row in reader:
-                            if query.lower() in str(row).lower():  # Search case-insensitively in row data
+                if filename.endswith('.csv'):
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    with open(file_path, 'r') as file:
+                        csv_reader = csv.DictReader(file)
+                        for row in csv_reader:
+                            # Effectuer la recherche sur les valeurs des colonnes
+                            if any(query.lower() in str(value).lower() for value in row.values()):
                                 results.append(row)
     return render_template('search.html', results=results)
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000, debug=True)
