@@ -50,5 +50,9 @@ def search():
                                 results.append(row)
     return render_template('search.html', results=results)
 
+@app.route('/dashboard')
+def dashboard():
+    return render_template('Dashboard.html')
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

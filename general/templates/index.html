@@ -149,9 +149,6 @@
 <body>
     <header class="header">
         <h2>Système de Gestion des Fichiers CSV</h2>
-        <button class="header-button" onclick="window.open('https://turbo-space-enigma-567vx75xjrxhrgx-5601.app.github.dev/app/dashboards#/view/f82a4bc0-b156-11ef-a1b0-1167766c9e35?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now)))', '_blank')">
-            Dashboard
-        </button>
     </header>
     <div class="main-content">
         <div class="container">
@@ -161,8 +158,9 @@
                 <input type="file" name="file" id="file" required>
                 <div>
                     <button type="submit">Envoyer</button>
-                    <button type="button" class="secondary" onclick="window.open('https://turbo-space-enigma-567vx75xjrxhrgx-5601.app.github.dev/app/lens#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))', '_blank')">
-                        Ajouter Dashboards 
+                    <!-- Updated button to link to /dashboard route -->
+                    <button type="button" onclick="window.location.href='/dashboard'">
+                        Dashboard
                     </button>
                     <button type="button" class="search" onclick="window.location.href='/search'">
                         Rechercher dans les CSV
